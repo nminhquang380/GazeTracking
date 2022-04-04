@@ -5,6 +5,7 @@ Check the README.md for complete documentation.
 
 import cv2
 from gaze_tracking import GazeTracking
+import pyautogui as pt
 
 gaze = GazeTracking()
 webcam = cv2.VideoCapture(0)
@@ -25,19 +26,40 @@ while True:
         text = "Looking right"
     elif gaze.is_left():
         text = "Looking left"
+    elif gaze.is_top():
+        text = "Looking top"
+    elif gaze.is_bot():
+        text = "Looking bottom"
     elif gaze.is_center():
         text = "Looking center"
+    else:
+        text = "Looking"
+
+    # control mouse
+    # if gaze.is_blinking():
+    #     pt.click()
+    # elif gaze.is_right():
+    #     pt.move(20, 0)
+    # elif gaze.is_left():
+    #     pt.move(-20, 0)
+    # elif gaze.is_top():
+    #     pt.move(0, 20)
+    # elif gaze.is_bot():
+    #     pt.move(0, -20)
 
     cv2.putText(frame, text, (90, 60), cv2.FONT_HERSHEY_DUPLEX, 1.6, (147, 58, 31), 2)
 
-    left_pupil = gaze.pupil_left_coords()
-    right_pupil = gaze.pupil_right_coords()
-    cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
-    cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
+    # left_pupil = gaze.pupil_left_coords()
+    # right_pupil = gaze.pupil_right_coords()
+    # cv2.putText(frame, "Left pupil:  " + str(left_pupil), (90, 130), cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
+    # cv2.putText(frame, "Right pupil: " + str(right_pupil), (90, 165), cv2.FONT_HERSHEY_DUPLEX, 0.9, (147, 58, 31), 1)
 
+    # show horizontal and vertical ratio
+    cv2.putText(frame, "Horizontal ratio: " + str(gaze.horizontal_ratio()), (90, 130), cv2.FONT_HERSHEY_DUPLEX, 1, (147, 58, 31), 2)
+    cv2.putText(frame, "Vertical ratio: " + str(gaze.vertical_ratio()), (90, 160), cv2.FONT_HERSHEY_DUPLEX, 1, (147, 58, 31), 2)
     cv2.imshow("Demo", frame)
 
-    if cv2.waitKey(1) == 27:
+    if cv2.waitKey(1) == ord('q'):
         break
    
 webcam.release()

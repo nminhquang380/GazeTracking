@@ -5,6 +5,8 @@ import dlib
 from .eye import Eye
 from .calibration import Calibration
 
+MIN = 0.40
+MAX = 0.60
 
 class GazeTracking(object):
     """
@@ -76,6 +78,9 @@ class GazeTracking(object):
             y = self.eye_right.origin[1] + self.eye_right.pupil.y
             return (x, y)
 
+#Chỉnh sửa horizontal và vertical. Detect Pupils chưa được chính xác.
+
+
     def horizontal_ratio(self):
         """Returns a number between 0.0 and 1.0 that indicates the
         horizontal direction of the gaze. The extreme right is 0.0,
@@ -97,20 +102,31 @@ class GazeTracking(object):
             return (pupil_left + pupil_right) / 2
 
     def is_right(self):
+        
         """Returns true if the user is looking to the right"""
         if self.pupils_located:
-            return self.horizontal_ratio() <= 0.35
+            return self.horizontal_ratio() <= MIN and self.vertical_ratio() > MIN and self.vertical_ratio() < MAX
 
     def is_left(self):
         """Returns true if the user is looking to the left"""
         if self.pupils_located:
-            return self.horizontal_ratio() >= 0.65
+            return self.horizontal_ratio() >= MAX and self.vertical_ratio() > MIN and self.vertical_ratio() < MAX
+
+    def is_top(self):
+        """Returns true if the user is looking to the top"""
+        if self.pupils_located:
+            return self.horizontal_ratio() <= MIN and self.horizontal_ratio() > MIN and self.horizontal_ratio() < MAX
+
+    def is_bot(self):
+        """Returns true if the user is looking to the bottom"""
+        if self.pupils_located:
+            return self.horizontal_ratio() >= MAX and self.horizontal_ratio() > MIN and self.horizontal_ratio() < MAX
 
     def is_center(self):
         """Returns true if the user is looking to the center"""
         if self.pupils_located:
-            return self.is_right() is not True and self.is_left() is not True
-
+            return self.horizontal_ratio() > MIN and self.horizontal_ratio() < MAX and self.vertical_ratio() > MIN and self.vertical_ratio() < MAX
+    
     def is_blinking(self):
         """Returns true if the user closes his eyes"""
         if self.pupils_located:
@@ -118,9 +134,10 @@ class GazeTracking(object):
             return blinking_ratio > 3.8
 
     def annotated_frame(self):
-        """Returns the main frame with pupils highlighted"""
+        """Returns the main frame with pupils highlighted and draw contours for eyes"""
         frame = self.frame.copy()
 
+        #highlight the pupils
         if self.pupils_located:
             color = (0, 255, 0)
             x_left, y_left = self.pupil_left_coords()
@@ -129,5 +146,10 @@ class GazeTracking(object):
             cv2.line(frame, (x_left, y_left - 5), (x_left, y_left + 5), color)
             cv2.line(frame, (x_right - 5, y_right), (x_right + 5, y_right), color)
             cv2.line(frame, (x_right, y_right - 5), (x_right, y_right + 5), color)
+
+        #draw contours for eyes
+        if self.pupils_located:
+            cv2.drawContours(frame, [self.eye_left.landmark_points], -1, (0, 255, 0), 1)
+            cv2.drawContours(frame, [self.eye_right.landmark_points], -1, (0, 255, 0), 1)
 
         return frame
